@@ -28,7 +28,7 @@ Pushes to `main` auto-deploy via Cloudflare Pages.
 
 Manual deploy (fallback):
 ```bash
-npx wrangler pages deploy dist --project-name super-dashboards-com
+npx wrangler pages deploy dist --project-name super-dashboards-website
 ```
 
 Requires `CLOUDFLARE_API_TOKEN` env var. Token management:
