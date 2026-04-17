@@ -1,0 +1,74 @@
+---
+import { getCollection } from "astro:content";
+import { CATEGORY_LABELS } from "../../content.config";
+import Base from "../../layouts/Base.astro";
+
+export const prerender = true;
+
+const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+
+// Build category list with counts from the posts themselves
+const categoryCounts = new Map<string, number>();
+for (const post of posts) {
+	categoryCounts.set(post.data.category, (categoryCounts.get(post.data.category) ?? 0) + 1);
+}
+const categories = Array.from(categoryCounts.entries()).map(([slug, count]) => ({
+	slug,
+	label: CATEGORY_LABELS[slug] ?? slug,
+	count,
+}));
+---
+
+<Base
+	title="The Superset Blog"
+	description="Practical guides, tutorials, and insights on Apache Superset — from getting started to production-grade analytics."
+>
+	<div class="post-header-banner">
+		<div class="container">
+			<header class="archive-header">
+				<h1 class="archive-title">The Superset Blog</h1>
+				<p class="archive-description">Practical guides, tutorials, and insights on Apache Superset — from getting started to production-grade analytics.</p>
+			</header>
+
+			{categories.length > 0 && (
+				<nav class="category-filters" aria-label="Browse by Topic">
+					<a href="/blog" class="category-pill is-active">All Topics</a>
+					{categories.map((cat) => (
+						<a href={`/category/${cat.slug}`} class="category-pill">
+							{cat.label}
+							<span class="category-count">{cat.count}</span>
+						</a>
+					))}
+				</nav>
+			)}
+		</div>
+	</div>
+
+	<div class="container">
+		{posts.length > 0 ? (
+			<div class="posts-grid">
+				{posts.map((post) => (
+					<article class="post-card">
+						<div class="post-card-body">
+							<span class="post-card-category">
+								<a href={`/category/${post.data.category}`}>
+									{CATEGORY_LABELS[post.data.category] ?? post.data.category}
+								</a>
+							</span>
+							<h2 class="post-card-title">
+								<a href={`/${post.id}`}>{post.data.title}</a>
+							</h2>
+							{post.data.excerpt && (
+								<p class="post-card-excerpt">{post.data.excerpt}</p>
+							)}
+						</div>
+					</article>
+				))}
+			</div>
+		) : (
+			<p class="no-results">No articles found yet. Check back soon!</p>
+		)}
+	</div>
+</Base>

@@ -1,0 +1,74 @@
+---
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import BookingModal from "../components/BookingModal.astro";
+import "../styles/global.css";
+
+interface Props {
+	title: string;
+	description?: string | null;
+	image?: string | null;
+	canonical?: string | null;
+	hideHeader?: boolean;
+}
+
+const { title, description, image, canonical, hideHeader = false } = Astro.props;
+
+const menu = {
+	items: [
+		{ label: "Home", url: "/" },
+		{ label: "Blog", url: "/blog" },
+		{ label: "Services", url: "/#services" },
+	],
+};
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{title} | Super Dashboards</title>
+		{description && <meta name="description" content={description} />}
+		{canonical && <link rel="canonical" href={canonical} />}
+
+		{/* Open Graph */}
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		{description && <meta property="og:description" content={description} />}
+		{image && <meta property="og:image" content={image} />}
+
+		{/* Twitter */}
+		<meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+		<meta name="twitter:title" content={title} />
+		{description && <meta name="twitter:description" content={description} />}
+		{image && <meta name="twitter:image" content={image} />}
+
+		{/* Google Analytics (production only) */}
+		<script is:inline>
+			if (location.hostname === "super-dashboards.com" || location.hostname === "www.super-dashboards.com") {
+				const s = document.createElement("script");
+				s.async = true;
+				s.src = "https://www.googletagmanager.com/gtag/js?id=G-JK5ELBHTNJ";
+				document.head.appendChild(s);
+				window.dataLayer = window.dataLayer || [];
+				function gtag(){dataLayer.push(arguments);}
+				window.gtag = gtag;
+				gtag("js", new Date());
+				gtag("config", "G-JK5ELBHTNJ");
+			}
+		</script>
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Figtree:wght@400;600;700;800&display=swap" rel="stylesheet" />
+	</head>
+	<body>
+		{!hideHeader && <Header menu={menu} />}
+
+		<slot />
+
+		<Footer />
+		<BookingModal />
+	</body>
+</html>

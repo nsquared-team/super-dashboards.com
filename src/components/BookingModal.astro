@@ -1,0 +1,155 @@
+---
+// Booking modal — embeds the Simply Schedule Appointments (SSA) widget
+// hosted on the existing WordPress site via its public embed endpoint.
+---
+
+<div class="booking-modal" id="booking-modal" aria-hidden="true">
+	<div class="booking-modal-overlay"></div>
+	<div class="booking-modal-container">
+		<button type="button" class="booking-modal-close" aria-label="Close booking modal">&times;</button>
+		<div class="booking-modal-content">
+			<div id="ssa-booking-skeleton" class="ssa-skeleton" aria-hidden="true">
+				<div class="ssa-skeleton-line ssa-skeleton-title"></div>
+				<div class="ssa-skeleton-line ssa-skeleton-sub"></div>
+				<div class="ssa-skeleton-grid">
+					<div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+					<div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+					<div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+					<div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+					<div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+				</div>
+			</div>
+			<div id="ssa-booking-mount"></div>
+		</div>
+	</div>
+</div>
+
+<style>
+	.ssa-skeleton {
+		padding: 32px 24px;
+		min-height: 460px;
+	}
+	.ssa-skeleton-line {
+		height: 18px;
+		border-radius: 6px;
+		background: linear-gradient(90deg, #eef0f3 0%, #f7f8fa 50%, #eef0f3 100%);
+		background-size: 200% 100%;
+		animation: ssa-shimmer 1.4s ease-in-out infinite;
+		margin: 0 auto 12px;
+	}
+	.ssa-skeleton-title { width: 60%; height: 24px; }
+	.ssa-skeleton-sub { width: 35%; margin-bottom: 28px; }
+	.ssa-skeleton-grid {
+		display: grid;
+		grid-template-columns: repeat(7, 1fr);
+		gap: 8px;
+		max-width: 360px;
+		margin: 0 auto;
+	}
+	.ssa-skeleton-grid > div {
+		aspect-ratio: 1;
+		border-radius: 6px;
+		background: linear-gradient(90deg, #eef0f3 0%, #f7f8fa 50%, #eef0f3 100%);
+		background-size: 200% 100%;
+		animation: ssa-shimmer 1.4s ease-in-out infinite;
+	}
+	@keyframes ssa-shimmer {
+		0% { background-position: 200% 0; }
+		100% { background-position: -200% 0; }
+	}
+	.ssa-skeleton.is-hidden { display: none; }
+</style>
+
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const modal = document.getElementById("booking-modal");
+		if (!modal) return;
+
+		const overlay = modal.querySelector(".booking-modal-overlay");
+		const closeBtn = modal.querySelector(".booking-modal-close");
+		const mount = modal.querySelector("#ssa-booking-mount");
+		const skeleton = modal.querySelector("#ssa-booking-skeleton");
+
+		let embedLoaded = false;
+
+		function hideSkeleton() {
+			if (skeleton) skeleton.classList.add("is-hidden");
+		}
+
+		function watchForIframe() {
+			if (!mount) return;
+			// SSA injects an iframe; hide skeleton once it's in the DOM and loaded.
+			const observer = new MutationObserver(() => {
+				const iframe = mount.querySelector("iframe");
+				if (iframe) {
+					observer.disconnect();
+					if (iframe.contentDocument?.readyState === "complete") {
+						hideSkeleton();
+					} else {
+						iframe.addEventListener("load", hideSkeleton, { once: true });
+						// Safety net: hide after 4s even if load event never fires
+						setTimeout(hideSkeleton, 4000);
+					}
+				}
+			});
+			observer.observe(mount, { childList: true, subtree: true });
+			// Safety net: stop observing after 8s
+			setTimeout(() => observer.disconnect(), 8000);
+		}
+
+		async function loadSsaEmbed() {
+			if (embedLoaded || !mount) return;
+			embedLoaded = true;
+
+			watchForIframe();
+
+			try {
+				const res = await fetch(
+					"https://super-dashboards.simplyschedule.me/wp-json/ssa/v1/embed_booking_app/?accent_color=be202b"
+				);
+				if (!res.ok) throw new Error(`SSA embed HTTP ${res.status}`);
+				const jsCode = await res.text();
+
+				// The endpoint returns an expression that evaluates to a JS string.
+				// Wrap execution so SSA's self-mounting script runs inside the modal.
+				const script = document.createElement("script");
+				script.type = "text/javascript";
+				// eslint-disable-next-line no-eval
+				script.text = eval(jsCode);
+				mount.appendChild(script);
+			} catch (err) {
+				console.error("Failed to load SSA booking widget:", err);
+				hideSkeleton();
+				mount.innerHTML =
+					'<div style="text-align: center; padding: 60px 24px;">' +
+					'<p style="font-size: 18px; color: var(--color-blue);">' +
+					"Couldn't load the booking widget. Please try again or email us directly." +
+					"</p></div>";
+			}
+		}
+
+		function openModal() {
+			modal.classList.add("is-open");
+			modal.setAttribute("aria-hidden", "false");
+			loadSsaEmbed();
+		}
+
+		function closeModal() {
+			modal.classList.remove("is-open");
+			modal.setAttribute("aria-hidden", "true");
+		}
+
+		document.querySelectorAll(".open-booking-modal").forEach((btn) => {
+			btn.addEventListener("click", openModal);
+		});
+
+		overlay?.addEventListener("click", closeModal);
+		closeBtn?.addEventListener("click", closeModal);
+
+		document.addEventListener("keydown", (e) => {
+			if (e.key === "Escape" && modal.classList.contains("is-open")) {
+				closeModal();
+			}
+		});
+	});
+</script>

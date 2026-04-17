@@ -1,0 +1,80 @@
+---
+import { getCollection } from "astro:content";
+import { CATEGORY_LABELS } from "../../content.config";
+import Base from "../../layouts/Base.astro";
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+	const posts = await getCollection("posts", ({ data }) => !data.draft);
+	const categorySlugs = new Set(posts.map((p) => p.data.category));
+	return Array.from(categorySlugs).map((slug) => ({
+		params: { slug },
+		props: {
+			slug,
+			label: CATEGORY_LABELS[slug] ?? slug,
+			posts: posts
+				.filter((p) => p.data.category === slug)
+				.sort((a, b) => b.data.date.getTime() - a.data.date.getTime()),
+		},
+	}));
+}
+
+const { slug, label, posts } = Astro.props;
+
+// Other categories for the filter pill bar
+const allPosts = await getCollection("posts", ({ data }) => !data.draft);
+const categoryCounts = new Map<string, number>();
+for (const p of allPosts) {
+	categoryCounts.set(p.data.category, (categoryCounts.get(p.data.category) ?? 0) + 1);
+}
+const categories = Array.from(categoryCounts.entries()).map(([s, count]) => ({
+	slug: s,
+	label: CATEGORY_LABELS[s] ?? s,
+	count,
+}));
+---
+
+<Base title={`${label} — The Superset Blog`} description={`Posts about ${label}`}>
+	<div class="post-header-banner">
+		<div class="container">
+			<header class="archive-header">
+				<h1 class="archive-title">{label}</h1>
+			</header>
+
+			<nav class="category-filters" aria-label="Browse by Topic">
+				<a href="/blog" class="category-pill">All Topics</a>
+				{categories.map((cat) => (
+					<a
+						href={`/category/${cat.slug}`}
+						class:list={["category-pill", { "is-active": cat.slug === slug }]}
+					>
+						{cat.label}
+						<span class="category-count">{cat.count}</span>
+					</a>
+				))}
+			</nav>
+		</div>
+	</div>
+
+	<div class="container">
+		{posts.length > 0 ? (
+			<div class="posts-grid">
+				{posts.map((post) => (
+					<article class="post-card">
+						<div class="post-card-body">
+							<h2 class="post-card-title">
+								<a href={`/${post.id}`}>{post.data.title}</a>
+							</h2>
+							{post.data.excerpt && (
+								<p class="post-card-excerpt">{post.data.excerpt}</p>
+							)}
+						</div>
+					</article>
+				))}
+			</div>
+		) : (
+			<p class="no-results">No articles found in this topic yet. Check back soon!</p>
+		)}
+	</div>
+</Base>

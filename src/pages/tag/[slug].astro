@@ -1,0 +1,55 @@
+---
+import { getCollection } from "astro:content";
+import { TAG_LABELS } from "../../content.config";
+import Base from "../../layouts/Base.astro";
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+	const posts = await getCollection("posts", ({ data }) => !data.draft);
+	const tagSlugs = new Set(posts.flatMap((p) => p.data.tags));
+	return Array.from(tagSlugs).map((slug) => ({
+		params: { slug },
+		props: {
+			slug,
+			label: TAG_LABELS[slug] ?? slug,
+			posts: posts
+				.filter((p) => p.data.tags.includes(slug))
+				.sort((a, b) => b.data.date.getTime() - a.data.date.getTime()),
+		},
+	}));
+}
+
+const { label, posts } = Astro.props;
+---
+
+<Base title={`Posts tagged "${label}" — The Superset Blog`} description={`Posts tagged ${label}`}>
+	<div class="post-header-banner">
+		<div class="container">
+			<header class="archive-header">
+				<h1 class="archive-title">Tag: {label}</h1>
+			</header>
+		</div>
+	</div>
+
+	<div class="container">
+		{posts.length > 0 ? (
+			<div class="posts-grid">
+				{posts.map((post) => (
+					<article class="post-card">
+						<div class="post-card-body">
+							<h2 class="post-card-title">
+								<a href={`/${post.id}`}>{post.data.title}</a>
+							</h2>
+							{post.data.excerpt && (
+								<p class="post-card-excerpt">{post.data.excerpt}</p>
+							)}
+						</div>
+					</article>
+				))}
+			</div>
+		) : (
+			<p class="no-results">No posts with this tag yet.</p>
+		)}
+	</div>
+</Base>

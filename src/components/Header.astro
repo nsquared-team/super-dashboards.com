@@ -1,0 +1,52 @@
+---
+interface Props {
+	menu?: { items: { label: string; url: string; target?: string }[] } | null;
+}
+
+const { menu } = Astro.props;
+---
+
+<header class="site-header">
+	<div class="container">
+		<div class="site-header-inner">
+			<a href="/" class="site-logo" aria-label="Super Dashboards - Home">
+				<span class="site-logo-badge">
+					<span class="dot"></span>
+					Apache Superset Specialists
+				</span>
+			</a>
+
+			<button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+				<span class="nav-toggle-bar"></span>
+				<span class="nav-toggle-bar"></span>
+				<span class="nav-toggle-bar"></span>
+			</button>
+
+			<nav class="site-nav" role="navigation" aria-label="Primary Navigation">
+				{menu?.items && (
+					<ul class="nav-menu">
+						{menu.items.map((item) => (
+							<li><a href={item.url} target={item.target}>{item.label}</a></li>
+						))}
+					</ul>
+				)}
+				<a href="/#services" class="btn btn-secondary btn-nav">Explore Services</a>
+				<button type="button" class="btn btn-primary btn-nav open-booking-modal">Book a Consult</button>
+			</nav>
+		</div>
+	</div>
+</header>
+
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const toggle = document.querySelector(".nav-toggle");
+		const nav = document.querySelector(".site-nav");
+		if (toggle && nav) {
+			toggle.addEventListener("click", () => {
+				const expanded = toggle.getAttribute("aria-expanded") === "true";
+				toggle.setAttribute("aria-expanded", String(!expanded));
+				nav.classList.toggle("is-open");
+			});
+		}
+	});
+</script>
