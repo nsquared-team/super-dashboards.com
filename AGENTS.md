@@ -1,49 +1,39 @@
-This is an EmDash site -- a CMS built on Astro with a full admin UI.
+Static Astro marketing site for super-dashboards.com (Apache Superset consulting).
 
 ## Commands
 
 ```bash
-npx emdash dev        # Start dev server (runs migrations, seeds, generates types)
-npx emdash types      # Regenerate TypeScript types from schema
-npx emdash seed seed/seed.json --validate  # Validate seed file
+npm run dev       # Start dev server at localhost:4321
+npm run build     # Static build → dist/
+npm run preview   # Preview build locally
 ```
-
-The admin UI is at `http://localhost:4321/_emdash/admin`.
 
 ## Key Files
 
-| File                     | Purpose                                                                            |
-| ------------------------ | ---------------------------------------------------------------------------------- |
-| `astro.config.mjs`       | Astro config with `emdash()` integration, database, and storage                  |
-| `src/live.config.ts`     | EmDash loader registration (boilerplate -- don't modify)                         |
-| `seed/seed.json`         | Schema definition + demo content (collections, fields, taxonomies, menus, widgets) |
-| `emdash-env.d.ts`      | Generated types for collections (auto-regenerated on dev server start)             |
-| `src/layouts/Base.astro` | Base layout with EmDash wiring (menus, search, page contributions)               |
-| `src/pages/`             | Astro pages -- all server-rendered                                                 |
-
-## Skills
-
-Agent skills are in `.agents/skills/`. Load them when working on specific tasks:
-
-- **building-emdash-site** -- Querying content, rendering Portable Text, schema design, seed files, site features (menus, widgets, search, SEO, comments, bylines). Start here.
-- **creating-plugins** -- Building EmDash plugins with hooks, storage, admin UI, API routes, and Portable Text block types.
-- **emdash-cli** -- CLI commands for content management, seeding, type generation, and visual editing flow.
+| File                          | Purpose                                              |
+| ----------------------------- | ---------------------------------------------------- |
+| `astro.config.mjs`            | Astro config (static output, responsive images)      |
+| `src/pages/index.astro`       | Homepage (hero, services, booking CTA)               |
+| `src/layouts/Base.astro`      | Base layout with Google Analytics                    |
+| `src/components/Header.astro` | Navigation                                           |
+| `src/components/Footer.astro` | Footer                                               |
+| `src/components/BookingModal.astro` | SSA booking embed modal                        |
+| `src/content/posts/`          | Markdown blog posts (content collection)             |
+| `src/content.config.ts`       | Content collection schema                            |
+| `src/styles/global.css`       | Global styles (ported from WordPress theme)          |
 
 ## Deploy
 
-Deploy to Cloudflare Pages via Wrangler:
+Pushes to `main` auto-deploy via Cloudflare Pages.
 
+Manual deploy (fallback):
 ```bash
 npx wrangler pages deploy dist --project-name super-dashboards-com
 ```
 
-Requires `CLOUDFLARE_API_TOKEN` env var. If auth fails, create a new token at:
+Requires `CLOUDFLARE_API_TOKEN` env var. Token management:
 https://dash.cloudflare.com/d16525d5cec3893e23d594d775d079b2/api-tokens
 
-## Rules
+## Git Submodule
 
-- All content pages must be server-rendered (`output: "server"`). No `getStaticPaths()` for CMS content.
-- Image fields are objects (`{ src, alt }`), not strings. Use `<Image image={...} />` from `"emdash/ui"`.
-- `entry.id` is the slug (for URLs). `entry.data.id` is the database ULID (for API calls like `getEntryTerms`).
-- Always call `Astro.cache.set(cacheHint)` on pages that query content.
-- Taxonomy names in queries must match the seed's `"name"` field exactly (e.g., `"category"` not `"categories"`).
+This repo is included as a submodule in `nsquared-team/blink-operations-ai` at `super-dashboards.com/`.
