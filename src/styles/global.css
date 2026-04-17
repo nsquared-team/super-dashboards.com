@@ -1251,17 +1251,22 @@ section {
     margin-bottom: 48px;
 }
 
-.footer-section p,
-.footer-section a {
+.footer-section p {
     color: rgba(255, 255, 255, 0.9);
     font-size: 16px;
     line-height: 160%;
-    text-decoration: none;
+}
+
+.footer-section a {
+    color: var(--color-gold);
+    font-size: 16px;
+    line-height: 160%;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 .footer-section a:hover {
-    color: var(--color-gold);
-    text-decoration: underline;
+    color: white;
 }
 
 .footer-bottom {

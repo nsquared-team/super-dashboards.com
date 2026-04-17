@@ -5,3 +5,4 @@ uploads
 data.db
 .wrangler
 .certs
+.DS_Store
